@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartStudy & Screen Guard</title>
+    <!-- Tailwind CSS for modern, premium, and fully responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configuring Tailwind custom dark mode toggle using standard class-based strategy
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for interactive dashboard icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for rendering the daily balance analytical reports -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter for elegant typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Smooth transitions for system theme & phase changes */
+        .theme-transition {
+            transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, shadow 0.4s ease;
+        }
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col theme-transition">
+
+    <!-- Main Header -->
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-50 shadow-sm theme-transition">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md shadow-indigo-100 dark:shadow-none flex items-center justify-center">
+                    <i class="fa-solid fa-brain text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">Smart<span class="text-indigo-600 dark:text-indigo-400">Study</span></h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Focus Guard & Screen Break Guide</p>
+                </div>
+            </div>
+            
+            <!-- Quick Digital Health Indicators & Theme Switcher -->
+            <div class="flex items-center space-x-3">
+                <div class="hidden md:flex items-center space-x-2 bg-indigo-50 dark:bg-indigo-950/40 px-3.5 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-900/40">
+                    <i class="fa-solid fa-graduation-cap text-indigo-600 dark:text-indigo-400 text-sm"></i>
+                    <span class="text-xs font-bold text-indigo-900 dark:text-indigo-200"><span id="header-streak">4</span> Day Streak</span>
+                </div>
+                
+                <!-- Added Score Indicator to resolve innerText crash -->
+                <div class="hidden md:flex items-center space-x-2 bg-indigo-50 dark:bg-indigo-950/40 px-3.5 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-900/40">
+                    <i class="fa-solid fa-star text-amber-500 text-sm"></i>
+                    <span class="text-xs font-bold text-indigo-900 dark:text-indigo-200">Score: <span id="header-score">90</span>%</span>
+                </div>
+                
+                <!-- Theme Mode Toggle Button -->
+                <button onclick="toggleTheme()" id="theme-toggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all" title="Toggle Light/Dark Theme">
+                    <i id="theme-toggle-icon" class="fa-solid fa-moon text-md"></i>
+                </button>
+
+                <!-- Demo Mode Toggle -->
+                <button onclick="toggleDemoMode()" id="demo-badge" class="px-3 py-1.5 text-xs font-bold rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all border border-amber-100 dark:border-amber-900/40 flex items-center space-x-1">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                    <span>Demo: Off</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Dynamic Navigation Tabs -->
+        <div class="flex space-x-2 bg-slate-200/60 dark:bg-slate-900 p-1.5 rounded-2xl max-w-lg mx-auto mb-6 border border-slate-200 dark:border-slate-800 theme-transition">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all duration-200 bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-hourglass-half"></i>
+                <span>Sessions & Control</span>
+            </button>
+            <button onclick="switchTab('detox')" id="tab-detox" class="flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-laptop-code"></i>
+                <span>Detox Guide</span>
+            </button>
+            <button onclick="switchTab('analytics')" id="tab-analytics" class="flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-chart-simple"></i>
+                <span>Mind Analytics</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: DASHBOARD / MAIN INTERFACE -->
+        <section id="panel-dashboard" class="tab-panel grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Side: Study Session & Screen Break Timer -->
+            <div class="lg:col-span-7 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between relative overflow-hidden theme-transition">
+                <!-- Abstract visual background shape -->
+                <div class="absolute -right-16 -bottom-16 w-64 h-64 bg-indigo-50 dark:bg-indigo-950/10 rounded-full filter blur-3xl opacity-60 pointer-events-none"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex justify-between items-center mb-4">
+                        <span id="timer-badge" class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-200">
+                            LEARNING PHASE (FOCUS)
+                        </span>
+                        <div class="flex items-center space-x-1.5 text-slate-500 dark:text-slate-400">
+                            <i class="fa-solid fa-eye-slash text-sm text-indigo-600 dark:text-indigo-400"></i>
+                            <span class="text-xs font-semibold">Protected Screen</span>
+                        </div>
+                    </div>
+
+                    <!-- Main Progress Ring (Tap to select time presets) -->
+                    <div class="flex flex-col items-center justify-center my-4 relative">
+                        <div class="relative w-64 h-64 flex items-center justify-center bg-slate-50/50 dark:bg-slate-950/30 rounded-full border border-slate-100/50 dark:border-slate-800/50">
+                            <!-- SVG Progress Ring -->
+                            <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" stroke="#f1f5f9" stroke-width="5" fill="transparent" class="stroke-slate-100 dark:stroke-slate-800" />
+                                <circle id="progress-circle" cx="50" cy="50" r="45" stroke="#4f46e5" stroke-width="5" fill="transparent" 
+                                        stroke-dasharray="282.7" stroke-dashoffset="0" stroke-linecap="round" class="transition-all duration-100" />
+                            </svg>
+                            
+                            <!-- Timer Display (Clickable during pause states) -->
+                            <div onclick="handleTimerClick()" id="timer-click-area" class="text-center relative z-10 cursor-pointer group hover:scale-105 transition-all duration-300 p-8 rounded-full">
+                                <span id="timer-display" class="text-5xl font-extrabold text-slate-950 dark:text-white tracking-tight transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400">45:00</span>
+                                <p id="timer-subtext" class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Cognitive Focus Session</p>
+                                <span id="tap-hint" class="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold block mt-1 opacity-80 group-hover:opacity-100 transition-opacity bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
+                                    <i class="fa-solid fa-pen-to-square mr-1"></i>Tap to change
+                                </span>
+                            </div>
+
+                            <!-- QUICK ADJUST OVERLAY (Inside the circle when timer is clicked) -->
+                            <div id="quick-adjust-overlay" class="absolute inset-0 bg-white/95 dark:bg-slate-900/95 rounded-full flex flex-col items-center justify-center p-4 transition-all duration-300 opacity-0 pointer-events-none z-20">
+                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">Select Study Session (Mins)</p>
+                                <div class="grid grid-cols-3 gap-1.5 mb-3 w-4/5">
+                                    <button onclick="setFocusPreset(15, event)" class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 rounded-lg text-xs font-bold transition-all">15m</button>
+                                    <button onclick="setFocusPreset(25, event)" class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 rounded-lg text-xs font-bold transition-all">25m</button>
+                                    <button onclick="setFocusPreset(30, event)" class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 rounded-lg text-xs font-bold transition-all">30m</button>
+                                    <button onclick="setFocusPreset(45, event)" class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 rounded-lg text-xs font-bold transition-all">45m</button>
+                                    <button onclick="setFocusPreset(60, event)" class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 rounded-lg text-xs font-bold transition-all">60m</button>
+                                    <button onclick="setFocusPreset(90, event)" class="px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 rounded-lg text-xs font-bold transition-all">90m</button>
+                                </div>
+                                <button onclick="closeQuickAdjust(event)" class="text-[10px] font-extrabold text-rose-500 hover:underline uppercase tracking-wider">
+                                    <i class="fa-solid fa-xmark mr-1"></i>Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timer Action Buttons -->
+                    <div class="flex flex-wrap items-center justify-center gap-3 mt-2">
+                        <button onclick="toggleTimer()" id="btn-toggle-timer" class="px-7 py-3 rounded-2xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-all flex items-center space-x-2 shadow-lg shadow-indigo-600/10">
+                            <i id="btn-toggle-icon" class="fa-solid fa-play"></i>
+                            <span id="btn-toggle-text">Start Session</span>
+                        </button>
+                        <button onclick="resetTimer()" class="px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-arrow-rotate-left mr-1.5"></i> Reset
+                        </button>
+                        <button onclick="triggerBreakEarly()" class="px-4 py-3 rounded-2xl border border-dashed border-amber-400 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 font-semibold text-sm transition-all flex items-center justify-center">
+                            <i class="fa-solid fa-eye mr-1.5"></i> Screen Break
+                        </button>
+                    </div>
+
+                    <!-- Interval Adjustment Stepper Directly Below Controls -->
+                    <div class="mt-6 p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-100/80 dark:border-slate-800/80">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-bold text-xs text-slate-900 dark:text-slate-200 flex items-center space-x-1">
+                                <i class="fa-solid fa-sliders text-indigo-600 dark:text-indigo-400"></i>
+                                <span>Control Study Session Intervals</span>
+                            </h4>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Configure intervals here</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Focus Time Adjustment -->
+                            <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 flex flex-col items-center justify-center">
+                                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Study Time</span>
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="adjustFocusViaStepper(-5)" class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold transition-colors">
+                                        <i class="fa-solid fa-minus text-xs"></i>
+                                    </button>
+                                    <span class="text-sm font-extrabold text-slate-900 dark:text-white"><span id="stepper-focus-val">45</span>m</span>
+                                    <button onclick="adjustFocusViaStepper(5)" class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold transition-colors">
+                                        <i class="fa-solid fa-plus text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Screen Break Time Adjustment -->
+                            <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 flex flex-col items-center justify-center">
+                                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Screen Break</span>
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="adjustBreakViaStepper(-1)" class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold transition-colors">
+                                        <i class="fa-solid fa-minus text-xs"></i>
+                                    </button>
+                                    <span class="text-sm font-extrabold text-slate-900 dark:text-white"><span id="stepper-break-val">1</span>m</span>
+                                    <button onclick="adjustBreakViaStepper(1)" class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold transition-colors">
+                                        <i class="fa-solid fa-plus text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Tip Card -->
+                <div class="mt-4 p-3.5 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/20 flex items-start space-x-3 relative z-10">
+                    <div class="p-2 bg-indigo-600/10 dark:bg-indigo-400/10 text-indigo-600 dark:text-indigo-400 rounded-xl">
+                        <i class="fa-regular fa-lightbulb text-md"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-xs text-slate-950 dark:text-white">Learning & Eye Health Tip</h4>
+                        <p id="live-tips" class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-0.5">Every 20 minutes spent looking at a screen, focus on an object 20 feet away for at least 20 seconds to prevent eye fatigue.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Eye & Mind Relaxation Visual Animator -->
+            <div class="lg:col-span-5 flex flex-col space-y-6">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between h-[360px] relative overflow-hidden theme-transition">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-slate-950 dark:text-white text-sm flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                            <span>Mind & Eye Exercise Visuals</span>
+                        </h3>
+                        <span id="current-stretch-name" class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">Study Session</span>
+                    </div>
+
+                    <!-- Stickman & Workspace Canvas SVG -->
+                    <div class="flex-grow flex items-center justify-center my-2">
+                        <svg id="stickman-svg" class="w-48 h-48 transition-all duration-500" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Study Desk -->
+                            <line x1="15" y1="85" x2="85" y2="85" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" class="stroke-slate-200 dark:stroke-slate-700" />
+                            
+                            <!-- Window on Left Side (Represents 20-20-20 Rule) -->
+                            <rect x="5" y="20" width="22" height="35" rx="3" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5" class="fill-slate-100 dark:fill-slate-800 stroke-slate-200 dark:stroke-slate-700" />
+                            <!-- Landscape Outside Window (Sun & Hill) -->
+                            <circle id="window-sun" cx="16" cy="30" r="3" fill="#f59e0b" class="transition-all duration-500" />
+                            <path d="M 6 52 Q 13 45 20 52 L 26 52" stroke="#10b981" stroke-width="1.5" fill="none" />
+                            
+                            <!-- Laptop on Right Side -->
+                            <rect id="screen" x="68" y="55" width="22" height="18" rx="2" fill="#94a3b8" class="fill-slate-400 dark:fill-slate-600" />
+                            <line x1="79" y1="73" x2="79" y2="84" stroke="#64748b" stroke-width="3" />
+                            <line x1="72" y1="84" x2="86" y2="84" stroke="#64748b" stroke-width="2.5" class="stroke-slate-500 dark:stroke-slate-600" />
+                            <!-- Glowing Screen Light (Blue glare dims when resting) -->
+                            <rect id="screen-glare" x="70" y="57" width="18" height="14" rx="1" fill="#38bdf8" opacity="0.6" class="transition-all duration-300" />
+
+                            <!-- Stickman Character Structure -->
+                            <!-- Chair Structure -->
+                            <line x1="42" y1="65" x2="42" y2="85" stroke="#cbd5e1" stroke-width="2" class="stroke-slate-200 dark:stroke-slate-700" />
+                            <line x1="32" y1="85" x2="52" y2="85" stroke="#cbd5e1" stroke-width="2" class="stroke-slate-200 dark:stroke-slate-700" />
+                            
+                            <!-- Spine & Torso -->
+                            <line id="spine" x1="48" y1="60" x2="48" y2="85" stroke="#1e293b" stroke-width="4.5" stroke-linecap="round" class="stroke-slate-800 dark:stroke-slate-200" />
+                            <!-- Head & Neck -->
+                            <circle id="head" cx="48" cy="45" r="9" fill="#4f46e5" class="transition-all duration-300 dark:fill-indigo-500" />
+                            <line id="neck" x1="48" y1="52" x2="48" y2="60" stroke="#1e293b" stroke-width="3.5" class="stroke-slate-800 dark:stroke-slate-200" />
+                            <!-- Arms -->
+                            <line id="arm-left" x1="48" y1="63" x2="62" y2="76" stroke="#475569" stroke-width="3" stroke-linecap="round" class="stroke-slate-700 dark:stroke-slate-300" />
+                            <line id="arm-right" x1="48" y1="63" x2="62" y2="76" stroke="#475569" stroke-width="3" stroke-linecap="round" class="stroke-slate-700 dark:stroke-slate-300" />
+                            <!-- Hips & Legs -->
+                            <line x1="48" y1="85" x2="65" y2="85" stroke="#475569" stroke-width="3.5" stroke-linecap="round" class="stroke-slate-700 dark:stroke-slate-300" />
+                            <line x1="65" y1="85" x2="65" y2="105" stroke="#475569" stroke-width="3.5" stroke-linecap="round" class="stroke-slate-700 dark:stroke-slate-300" />
+                            
+                            <!-- Glowing fatigue indicator on eye -->
+                            <circle id="eye-glow" cx="48" cy="45" r="3" fill="#f43f5e" opacity="0" class="transition-all duration-300" />
+                        </svg>
+                    </div>
+
+                    <!-- Animation Guide Instruction Card -->
+                    <div class="text-center bg-slate-50 dark:bg-slate-950/40 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <p id="animation-instruction" class="text-xs text-slate-700 dark:text-slate-300 font-semibold">Ensure your forehead is aligned with the top of your screen.</p>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Follow the live animation instructions during your study session!</p>
+                    </div>
+                </div>
+
+                <!-- Achievements & Gamification Tracker -->
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm theme-transition">
+                    <h3 class="font-bold text-slate-950 dark:text-white text-sm mb-4 flex items-center space-x-2">
+                        <i class="fa-solid fa-trophy text-amber-500 animate-bounce"></i>
+                        <span>Mind Achievements & Device Discipline</span>
+                    </h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div id="badge-1" class="bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl flex flex-col items-center justify-center text-center opacity-40 transition-all duration-300">
+                            <span class="text-2xl">⚡</span>
+                            <span class="text-[10px] font-bold text-slate-800 dark:text-slate-200 mt-1">Super Focus</span>
+                            <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">First Session</span>
+                        </div>
+                        <div id="badge-2" class="bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl flex flex-col items-center justify-center text-center opacity-40 transition-all duration-300">
+                            <span class="text-2xl">👁️</span>
+                            <span class="text-[10px] font-bold text-slate-800 dark:text-slate-200 mt-1">Screen Free</span>
+                            <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">3 Eye Breaks</span>
+                        </div>
+                        <div id="badge-3" class="bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl flex flex-col items-center justify-center text-center opacity-40 transition-all duration-300">
+                            <span class="text-2xl">🌱</span>
+                            <span class="text-[10px] font-bold text-slate-800 dark:text-slate-200 mt-1">Sharp Mind</span>
+                            <span class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">Score &gt; 90%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: SCREEN DETOX & MIND RELAXATION GUIDE -->
+        <section id="panel-detox" class="tab-panel hidden space-y-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-extrabold text-slate-950 dark:text-white">Screen Detox & Mind Relaxation Guide</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Quick, scientifically proven methods to restore eye freshness and boost study focus.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Detox Card 1 -->
+                    <div onclick="previewSpecificStretch('eye_202020')" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:border-indigo-300 dark:hover:border-indigo-800 hover:shadow-md hover:shadow-indigo-50/50 dark:hover:shadow-none transition-all cursor-pointer flex space-x-4">
+                        <div class="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 p-4 rounded-2xl h-14 w-14 flex items-center justify-center text-xl flex-shrink-0">
+                            <i class="fa-solid fa-mountain-sun"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 font-extrabold px-2.5 py-0.5 rounded-full">20-20-20 RULE</span>
+                            <h3 class="font-bold text-slate-900 dark:text-white mt-1.5 text-sm">Look Out the Window (20-20-20 Rule)</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Turn your gaze away from screens. Locate an object 20 feet away (or outside the window) and focus on it for 20 seconds to relax your eye lenses.</p>
+                        </div>
+                    </div>
+
+                    <!-- Detox Card 2 -->
+                    <div onclick="previewSpecificStretch('eye_palming')" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:border-amber-300 dark:hover:border-amber-800 hover:shadow-md hover:shadow-amber-50/50 dark:hover:shadow-none transition-all cursor-pointer flex space-x-4">
+                        <div class="bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 p-4 rounded-2xl h-14 w-14 flex items-center justify-center text-xl flex-shrink-0">
+                            <i class="fa-solid fa-hands"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 font-extrabold px-2.5 py-0.5 rounded-full">WARM PALMING</span>
+                            <h3 class="font-bold text-slate-900 dark:text-white mt-1.5 text-sm">Warm Palm Palming Technique</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Rub your palms together until warm, then gently place them over your closed eyelids to stimulate refreshing blood circulation around the optics.</p>
+                        </div>
+                    </div>
+
+                    <!-- Detox Card 3 -->
+                    <div onclick="previewSpecificStretch('mind_breathing')" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:border-emerald-300 dark:hover:border-emerald-800 hover:shadow-md hover:shadow-emerald-50/50 dark:hover:shadow-none transition-all cursor-pointer flex space-x-4">
+                        <div class="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 p-4 rounded-2xl h-14 w-14 flex items-center justify-center text-xl flex-shrink-0">
+                            <i class="fa-solid fa-wind"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 font-extrabold px-2.5 py-0.5 rounded-full">COGNITIVE RELIEF</span>
+                            <h3 class="font-bold text-slate-900 dark:text-white mt-1.5 text-sm">4-7-8 Diaphragmatic Breathing</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Inhale for 4 seconds, hold for 7 seconds, and exhale slowly for 8 seconds to actively reduce cognitive stress and calm your mind.</p>
+                        </div>
+                    </div>
+
+                    <!-- Detox Card 4 -->
+                    <div onclick="previewSpecificStretch('hydration_check')" class="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:border-blue-300 dark:hover:border-blue-800 hover:shadow-md hover:shadow-blue-50/50 dark:hover:shadow-none transition-all cursor-pointer flex space-x-4">
+                        <div class="bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 p-4 rounded-2xl h-14 w-14 flex items-center justify-center text-xl flex-shrink-0">
+                            <i class="fa-solid fa-glass-water"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 font-extrabold px-2.5 py-0.5 rounded-full">BRAIN HYDRATION</span>
+                            <h3 class="font-bold text-slate-900 dark:text-white mt-1.5 text-sm">Drink Water for Brain Oxygen</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Drink a glass of fresh water and stand up. Keeping your brain hydrated prevents sleepiness and fatigue during high-focus tasks.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: MIND ANALYTICS & PRODUCTIVITY REPORT -->
+        <section id="panel-analytics" class="tab-panel hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Left Column: Metrics & Weekly Progress Charts -->
+                <div class="lg:col-span-7 space-y-6">
+                    <!-- Metric Cards Row -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm theme-transition">
+                            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Total Detoxes</span>
+                            <p id="stat-total-stretches" class="text-2xl font-black text-slate-950 dark:text-white mt-1">12</p>
+                            <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mt-1 block"><i class="fa-solid fa-arrow-up"></i> +15% vs yesterday</span>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm theme-transition">
+                            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Focus Hours (Today)</span>
+                            <p id="stat-total-focus" class="text-2xl font-black text-slate-950 dark:text-white mt-1">4.5</p>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-1 block">Successfully Logged</span>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm theme-transition">
+                            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Sleep Quality</span>
+                            <p id="stat-streaks" class="text-2xl font-black text-amber-500 mt-1">Excellent</p>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-1 block">Rest Score: 88%</span>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Chart Container -->
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm theme-transition">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="font-bold text-slate-950 dark:text-white text-sm">Study Balance & Screen Detox Graph</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Weekly comparison of study focus hours against completed screen breaks.</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="w-3 h-3 rounded-full bg-indigo-600"></span>
+                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Focus Index (%)</span>
+                            </div>
+                        </div>
+                        <div class="h-64 relative">
+                            <canvas id="postureChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Screen Audit Card & Actionable Health Suggestions -->
+                <div class="lg:col-span-5 space-y-6">
+                    <!-- Screen Audit Report Card -->
+                    <div class="bg-gradient-to-br from-indigo-950 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden">
+                        <!-- Decorative glow -->
+                        <div class="absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/20 rounded-full filter blur-2xl"></div>
+                        
+                        <div class="relative z-10 space-y-4">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-shield-halved text-indigo-400"></i>
+                                <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">MIND AUDIT ANALYSIS</span>
+                            </div>
+                            
+                            <h3 class="text-lg font-bold leading-tight">Optic Nerve Status: <span class="text-amber-400">Stable & Fresh</span></h3>
+                            
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Your current mobile usage and learning patterns represent a highly sustainable cognitive balance. However, high visual fatigue is detected between 4:00 PM and 5:00 PM. Please avoid all active screens during this timeframe.
+                            </p>
+
+                            <!-- Sub-metrics within audit card -->
+                            <div class="pt-4 border-t border-indigo-850 space-y-2.5">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-450">Visual Fatigue Risk (Asthenopia)</span>
+                                    <span class="font-bold text-emerald-400">Low (15%)</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-450">Cognitive Break Discipline</span>
+                                    <span class="font-bold text-indigo-400">Very High</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Improvement Board -->
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm theme-transition">
+                        <h3 class="font-bold text-slate-950 dark:text-white text-sm mb-4 flex items-center space-x-2">
+                            <i class="fa-solid fa-lightbulb text-indigo-600 dark:text-indigo-400"></i>
+                            <span>Mind & Sleep Improvement Steps</span>
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3 text-xs leading-relaxed">
+                                <div class="p-1.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-lg mt-0.5 font-bold flex-shrink-0">
+                                    01
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 dark:text-white">Reduce Blue Light Exposure</h4>
+                                    <p class="text-slate-500 dark:text-slate-400 mt-0.5">Keep Night Shield (Amber Light) activated on your smartphones to stimulate natural, healthy Melatonin hormone production before bedtime.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-3 text-xs leading-relaxed">
+                                <div class="p-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-lg mt-0.5 font-bold flex-shrink-0">
+                                    02
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 dark:text-white">The 50-Centimeter Rule</h4>
+                                    <p class="text-slate-500 dark:text-slate-400 mt-0.5">Keep a minimum distance of 50 to 70 centimeters between your eyes and the laptop screen to shield your eyes from high screen glare.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-3 text-xs leading-relaxed">
+                                <div class="p-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-lg mt-0.5 font-bold flex-shrink-0">
+                                    03
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 dark:text-white">Improve Your Sleep Quality</h4>
+                                    <p class="text-slate-500 dark:text-slate-400 mt-0.5">Avoid active gadget usage at least 30 minutes before sleep. Replace screens with physical reading or mindfulness meditation.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Dialog / Modals (Prevents intrusive browser alerts) -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-all duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-300" id="modal-container">
+            <div class="text-center space-y-4">
+                <div class="w-16 h-16 bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-full mx-auto flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-hourglass-half animate-spin"></i>
+                </div>
+                <div>
+                    <h3 id="modal-title" class="text-lg font-bold text-slate-950 dark:text-white">Screen Break Activated!</h3>
+                    <p id="modal-desc" class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">Please turn your gaze away from the screen and follow the screen detox guide instructions.</p>
+                </div>
+                <div class="pt-2">
+                    <button onclick="closeModal()" class="w-full py-3.5 bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600 text-white font-semibold text-sm rounded-2xl transition-all shadow-lg">
+                        Got it, I'm ready to rest my eyes!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-6 mt-12 theme-transition">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-2">
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">© 2026 SmartStudy & Screen Guard. Your digital discipline & wellbeing companion.</p>
+            <p class="text-[10px] text-slate-400 dark:text-slate-500">Powered by Smart Health & Local Ergonomics Systems.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Global variables for Timer State Machine
+        let timerInterval = null;
+        let isRunning = false;
+        let isDemoMode = false;
+        
+        let focusTimeSetting = 45; // default focus minutes
+        let breakTimeSetting = 1;  // default break minutes
+        
+        let currentMinutes = 45;
+        let currentSeconds = 0;
+        let currentPhase = 'focus'; // 'focus' or 'break'
+        
+        // Gamification & Local Analytics Storage
+        let dailyScore = 90;
+        let dailyStreak = 4;
+        let completedStretchesCount = 12;
+        let activeBadgeList = [true, false, false]; // Badge 1, 2, 3
+
+        // Detox breaks configurations
+        const breakMessages = [
+            { name: "The 20-20-20 Rule", desc: "Turn your gaze away from screens. Find an object 20 feet away (or outside the window) and focus on it for 20 seconds.", stretch: "eye_202020" },
+            { name: "Eye Palming Warmth", desc: "Rub both palms together until warm, then cup them gently over closed eyelids for 15 seconds.", stretch: "eye_palming" },
+            { name: "4-7-8 Breathing Relief", desc: "Inhale through your nose for 4s, hold for 7s, and exhale slowly through your mouth for 8s.", stretch: "mind_breathing" },
+            { name: "Hydration Connection", desc: "Stand up, move around, and drink a glass of fresh water to restore neuronal alertness.", stretch: "hydration_check" }
+        ];
+
+        // Randomly rotated educational tips
+        const generalTips = [
+            "Every 20 minutes spent looking at a screen, focus on an object 20 feet away for at least 20 seconds.",
+            "Adjust your posture so your forehead aligns perfectly with the top edge of your monitor to avoid neck strain.",
+            "Utilize Night Shield mode on your gadgets to drastically reduce sleep-disruptive blue light exposure.",
+            "Keep your mobile devices at a healthy distance of at least 30 to 40 centimeters away from your face."
+        ];
+
+        // Sound notification synthesis utilizing the Web Audio API
+        function playBeepNotification(isStart) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = isStart ? 'sine' : 'triangle';
+                osc.frequency.setValueAtTime(isStart ? 587.33 : 440.00, ctx.currentTime);
+                if (isStart) {
+                    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+                } else {
+                    osc.frequency.exponentialRampToValueAtTime(293.66, ctx.currentTime + 0.15);
+                }
+                
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (e) {
+                console.log("Audio contexts skipped due to user interaction policies.");
+            }
+        }
+
+        // Initialize theme settings on load
+        function initTheme() {
+            const storedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (storedTheme === 'dark' || (!storedTheme && systemPrefersDark)) {
+                document.documentElement.classList.add('dark');
+                updateThemeToggleIcon(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateThemeToggleIcon(false);
+            }
+        }
+
+        // Handle Manual Theme Switch
+        function toggleTheme() {
+            const isCurrentlyDark = document.documentElement.classList.contains('dark');
+            if (isCurrentlyDark) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                updateThemeToggleIcon(false);
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                updateThemeToggleIcon(true);
+            }
+            updateChartTheme();
+        }
+
+        // Update Theme Icons
+        function updateThemeToggleIcon(isDark) {
+            const icon = document.getElementById('theme-toggle-icon');
+            if (isDark) {
+                icon.className = "fa-solid fa-sun text-md text-amber-400";
+            } else {
+                icon.className = "fa-solid fa-moon text-md text-slate-700";
+            }
+        }
+
+        // Listen for system theme preference changes dynamically
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            const storedTheme = localStorage.getItem('theme');
+            if (!storedTheme) {
+                if (e.matches) {
+                    document.documentElement.classList.add('dark');
+                    updateThemeToggleIcon(true);
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    updateThemeToggleIcon(false);
+                }
+                updateChartTheme();
+            }
+        });
+
+        // Initialize application on window load
+        window.onload = function() {
+            initTheme();
+            loadState();
+            updateUIState();
+            setupChart();
+            rotateGeneralTips();
+            
+            // Loop educational tips rotation every 15 seconds
+            setInterval(rotateGeneralTips, 15000);
+        }
+
+        // Local Storage State Hydration
+        function loadState() {
+            try {
+                if (localStorage.getItem('study_guard_streak')) {
+                    dailyStreak = parseInt(localStorage.getItem('study_guard_streak'));
+                    dailyScore = parseInt(localStorage.getItem('study_guard_score'));
+                    completedStretchesCount = parseInt(localStorage.getItem('study_guard_completed'));
+                }
+            } catch (e) {
+                console.warn("Local storage not accessible");
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('study_guard_streak', dailyStreak);
+                localStorage.setItem('study_guard_score', dailyScore);
+                localStorage.setItem('study_guard_completed', completedStretchesCount);
+            } catch (e) {
+                console.warn("Could not preserve application states locally");
+            }
+        }
+
+        // Tab switches management
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.className = "flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white flex items-center justify-center space-x-2";
+            });
+            
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.className = "flex-1 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all duration-200 bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm flex items-center justify-center space-x-2";
+        }
+
+        // Interacting with the dynamic timer circle overlay
+        function handleTimerClick() {
+            if (isRunning) {
+                openCustomAlert("Timer is currently active", "Please pause the active study timer session before configuring focus presets.");
+                return;
+            }
+            const overlay = document.getElementById('quick-adjust-overlay');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function closeQuickAdjust(event) {
+            if (event) event.stopPropagation();
+            const overlay = document.getElementById('quick-adjust-overlay');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function setFocusPreset(minutes, event) {
+            if (event) event.stopPropagation();
+            focusTimeSetting = minutes;
+            document.getElementById('stepper-focus-val').innerText = minutes;
+            closeQuickAdjust();
+            resetTimer();
+            openCustomAlert("Duration Updated", `Focus session duration updated to ${minutes} minutes!`);
+        }
+
+        // Focus stepper handlers
+        function adjustFocusViaStepper(amount) {
+            if (isRunning) {
+                openCustomAlert("Pause Required", "Please pause your current study session timer first.");
+                return;
+            }
+            let newVal = focusTimeSetting + amount;
+            if (newVal >= 5 && newVal <= 180) {
+                focusTimeSetting = newVal;
+                document.getElementById('stepper-focus-val').innerText = newVal;
+                resetTimer();
+            }
+        }
+
+        // Break stepper handlers
+        function adjustBreakViaStepper(amount) {
+            if (isRunning) {
+                openCustomAlert("Pause Required", "Please pause your current study session timer first.");
+                return;
+            }
+            let newVal = breakTimeSetting + amount;
+            if (newVal >= 1 && newVal <= 15) {
+                breakTimeSetting = newVal;
+                document.getElementById('stepper-break-val').innerText = newVal;
+                resetTimer();
+            }
+        }
+
+        // Quick Demonstration switcher (Fast forward modes)
+        function toggleDemoMode() {
+            isDemoMode = !isDemoMode;
+            const badge = document.getElementById('demo-badge');
+            if (isDemoMode) {
+                badge.className = "px-3 py-1.5 text-xs font-bold rounded-full bg-amber-500 text-white hover:bg-amber-600 transition-all border border-amber-600 flex items-center space-x-1";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-white animate-ping"></span><span>Demo: On</span>`;
+                focusTimeSetting = 0.1; // 6 seconds for learning phase
+                breakTimeSetting = 0.05; // 3 seconds for break phase
+            } else {
+                badge.className = "px-3 py-1.5 text-xs font-bold rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all border border-amber-100 dark:border-amber-900/40 flex items-center space-x-1";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span><span>Demo: Off</span>`;
+                focusTimeSetting = parseInt(document.getElementById('stepper-focus-val').innerText) || 45;
+                breakTimeSetting = parseInt(document.getElementById('stepper-break-val').innerText) || 1;
+            }
+            resetTimer();
+        }
+
+        // Core UI Layout Updates
+        function updateUIState() {
+            if (document.getElementById('header-streak')) {
+                document.getElementById('header-streak').innerText = dailyStreak;
+            }
+            if (document.getElementById('header-score')) {
+                document.getElementById('header-score').innerText = dailyScore;
+            }
+            
+            if (document.getElementById('stat-total-stretches')) {
+                document.getElementById('stat-total-stretches').innerText = completedStretchesCount;
+            }
+            if (document.getElementById('stat-total-focus')) {
+                document.getElementById('stat-total-focus').innerText = (completedStretchesCount * focusTimeSetting / 60).toFixed(1);
+            }
+            if (document.getElementById('stat-streaks')) {
+                document.getElementById('stat-streaks').innerText = `${dailyStreak} Days`;
+            }
+            
+            // Gamified badges unlocking conditions
+            if (completedStretchesCount >= 1) activeBadgeList[0] = true;
+            if (completedStretchesCount >= 3) activeBadgeList[1] = true;
+            if (dailyScore >= 90) activeBadgeList[2] = true;
+            
+            activeBadgeList.forEach((unlocked, idx) => {
+                const b = document.getElementById(`badge-${idx+1}`);
+                if (b) {
+                    if (unlocked) b.classList.remove('opacity-40');
+                    else b.classList.add('opacity-40');
+                }
+            });
+            
+            // Render clock digits
+            let displayMin = currentMinutes < 10 ? '0' + currentMinutes : currentMinutes;
+            let displaySec = currentSeconds < 10 ? '0' + currentSeconds : currentSeconds;
+            document.getElementById('timer-display').innerText = `${displayMin}:${displaySec}`;
+            
+            // Handle Progress Ring calculation
+            const totalSec = currentPhase === 'focus' ? (focusTimeSetting * 60) : (breakTimeSetting * 60);
+            const remainingSec = (currentMinutes * 60) + currentSeconds;
+            const progressRatio = totalSec > 0 ? (remainingSec / totalSec) : 0;
+            const circle = document.getElementById('progress-circle');
+            
+            circle.style.strokeDashoffset = 282.7 * (1 - progressRatio);
+            
+            // Colorise rings based on state phase
+            if (currentPhase === 'focus') {
+                circle.style.stroke = '#4f46e5'; // Indigo (Study)
+                document.getElementById('timer-badge').className = "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-200";
+                document.getElementById('timer-badge').innerText = "LEARNING PHASE (FOCUS)";
+                document.getElementById('timer-subtext').innerText = "Cognitive Focus Session";
+                document.getElementById('screen-glare').setAttribute('opacity', '0.6');
+                document.getElementById('eye-glow').setAttribute('opacity', '0');
+            } else {
+                circle.style.stroke = '#f59e0b'; // Amber (Rest)
+                document.getElementById('timer-badge').className = "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-200";
+                document.getElementById('timer-badge').innerText = "SCREEN DETOX (BREAK)";
+                document.getElementById('timer-subtext').innerText = "Rest Your Eyes Off Screen";
+                document.getElementById('screen-glare').setAttribute('opacity', '0.05');
+            }
+        }
+
+        // Custom Modal Alert Control
+        function openCustomAlert(title, message) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = message;
+            const modal = document.getElementById('custom-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('modal-container').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('opacity-0');
+            document.getElementById('modal-container').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // General Education Tip Rotator
+        function rotateGeneralTips() {
+            const randIndex = Math.floor(Math.random() * generalTips.length);
+            document.getElementById('live-tips').innerText = generalTips[randIndex];
+        }
+
+        // Dynamic Stickman Animation Engine
+        let animationFrame = null;
+        let animStep = 0;
+
+        function updateStickmanAnimation(stretchType) {
+            const head = document.getElementById('head');
+            const armLeft = document.getElementById('arm-left');
+            const armRight = document.getElementById('arm-right');
+            const spine = document.getElementById('spine');
+            const eyeGlow = document.getElementById('eye-glow');
+
+            animStep += 0.08;
+
+            if (stretchType === 'eye_202020') {
+                // Stickman looks left out of the window (20-20-20 Rule)
+                head.setAttribute('cx', 41);
+                head.setAttribute('cy', 45);
+                eyeGlow.setAttribute('cx', 41);
+                eyeGlow.setAttribute('opacity', '0');
+                
+                // Rest hands comfortably
+                armLeft.setAttribute('x2', 45);
+                armLeft.setAttribute('y2', 80);
+                armRight.setAttribute('x2', 45);
+                armRight.setAttribute('y2', 80);
+            } 
+            else if (stretchType === 'eye_palming') {
+                // Hands move up to cover head/eyes (Eye Palming)
+                head.setAttribute('cx', 48);
+                head.setAttribute('cy', 45);
+                eyeGlow.setAttribute('opacity', '0');
+                
+                armLeft.setAttribute('x2', 47);
+                armLeft.setAttribute('y2', 45);
+                armRight.setAttribute('x2', 49);
+                armRight.setAttribute('y2', 45);
+            } 
+            else if (stretchType === 'mind_breathing') {
+                // Breathing expansion/contraction motion loops
+                let breathingShift = Math.sin(animStep) * 3;
+                head.setAttribute('cy', 45 - breathingShift);
+                spine.setAttribute('y1', 60 - breathingShift);
+                eyeGlow.setAttribute('cy', 45 - breathingShift);
+                eyeGlow.setAttribute('opacity', '0');
+                
+                // Fold arms on chest
+                armLeft.setAttribute('x2', 48);
+                armLeft.setAttribute('y2', 65 - breathingShift);
+                armRight.setAttribute('x2', 48);
+                armRight.setAttribute('y2', 65 - breathingShift);
+            } 
+            else if (stretchType === 'hydration_check') {
+                // Hand moves to mouth holding a cup (Hydration)
+                let cupShift = Math.sin(animStep) * 4;
+                head.setAttribute('cx', 48);
+                armLeft.setAttribute('x2', 50);
+                armLeft.setAttribute('y2', 80);
+                
+                armRight.setAttribute('x2', 54);
+                armRight.setAttribute('y2', 54 + cupShift);
+            } 
+            else {
+                // Default study state
+                head.setAttribute('cx', 48);
+                head.setAttribute('cy', 45);
+                eyeGlow.setAttribute('cx', 48);
+                eyeGlow.setAttribute('cy', 45);
+                
+                // Intermittently emit fatigue eye glows
+                let fatigueOpacity = (Math.sin(animStep * 2) + 1) / 3;
+                eyeGlow.setAttribute('opacity', fatigueOpacity.toFixed(2));
+                
+                // Place hands on keyboard laptop
+                armLeft.setAttribute('x2', 62);
+                armLeft.setAttribute('y2', 76);
+                armRight.setAttribute('x2', 62);
+                armRight.setAttribute('y2', 76);
+            }
+        }
+
+        // Animation updates loop
+        function runAnimationLoop() {
+            let currentStretch = "default";
+            if (currentPhase === 'break') {
+                const idx = completedStretchesCount % breakMessages.length;
+                currentStretch = breakMessages[idx].stretch;
+            }
+            updateStickmanAnimation(currentStretch);
+            animationFrame = requestAnimationFrame(runAnimationLoop);
+        }
+
+        // Preview single exercise modes immediately from the guide panel
+        function previewSpecificStretch(stretchType) {
+            switchTab('dashboard');
+            currentPhase = 'break';
+            const stretchObj = breakMessages.find(s => s.stretch === stretchType);
+            document.getElementById('current-stretch-name').innerText = stretchObj.name;
+            document.getElementById('animation-instruction').innerText = stretchObj.desc;
+            
+            playBeepNotification(true);
+            
+            if (animationFrame) cancelAnimationFrame(animationFrame);
+            animStep = 0;
+            
+            const start = Date.now();
+            function runDemo() {
+                updateStickmanAnimation(stretchType);
+                if (Date.now() - start < 10000) { // Runs preview loop for 10 seconds
+                    animationFrame = requestAnimationFrame(runDemo);
+                } else {
+                    currentPhase = 'focus';
+                    updateUIState();
+                    cancelAnimationFrame(animationFrame);
+                    runAnimationLoop();
+                }
+            }
+            runDemo();
+        }
+
+        // Main Action clock toggler
+        function toggleTimer() {
+            if (isRunning) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                document.getElementById('btn-toggle-icon').className = "fa-solid fa-play";
+                document.getElementById('btn-toggle-text').innerText = "Start Session";
+                if (animationFrame) cancelAnimationFrame(animationFrame);
+            } else {
+                isRunning = true;
+                document.getElementById('btn-toggle-icon').className = "fa-solid fa-pause";
+                document.getElementById('btn-toggle-text').innerText = "Pause Session";
+                
+                runAnimationLoop();
+                
+                timerInterval = setInterval(() => {
+                    if (currentSeconds > 0) {
+                        currentSeconds--;
+                    } else if (currentMinutes > 0) {
+                        currentMinutes--;
+                        currentSeconds = 59;
+                    } else {
+                        triggerPhaseSwap();
+                    }
+                    updateUIState();
+                }, 1000);
+            }
+        }
+
+        // Clock resetting triggers
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            document.getElementById('btn-toggle-icon').className = "fa-solid fa-play";
+            document.getElementById('btn-toggle-text').innerText = "Start Session";
+            
+            currentPhase = 'focus';
+            if (isDemoMode) {
+                currentMinutes = 0;
+                currentSeconds = 6;
+            } else {
+                currentMinutes = focusTimeSetting;
+                currentSeconds = 0;
+            }
+            
+            updateUIState();
+            if (animationFrame) cancelAnimationFrame(animationFrame);
+            updateStickmanAnimation("default");
+        }
+
+        function triggerBreakEarly() {
+            currentPhase = 'focus';
+            triggerPhaseSwap();
+        }
+
+        // Swap between study state and break state
+        function triggerPhaseSwap() {
+            playBeepNotification(currentPhase === 'focus');
+            
+            if (currentPhase === 'focus') {
+                currentPhase = 'break';
+                if (isDemoMode) {
+                    currentMinutes = 0;
+                    currentSeconds = 3;
+                } else {
+                    currentMinutes = breakTimeSetting;
+                    currentSeconds = 0;
+                }
+                
+                const activeIndex = completedStretchesCount % breakMessages.length;
+                const activeStretch = breakMessages[activeIndex];
+                
+                document.getElementById('current-stretch-name').innerText = activeStretch.name;
+                document.getElementById('animation-instruction').innerText = activeStretch.desc;
+                
+                openCustomAlert(`Screen Detox Initiated!`, `Rest Time: ${activeStretch.name}. Please focus your attention off your gadget.`);
+            } else {
+                currentPhase = 'focus';
+                if (isDemoMode) {
+                    currentMinutes = 0;
+                    currentSeconds = 6;
+                } else {
+                    currentMinutes = focusTimeSetting;
+                    currentSeconds = 0;
+                }
+                
+                completedStretchesCount++;
+                dailyScore = Math.min(100, dailyScore + 4);
+                if (completedStretchesCount % 3 === 0) {
+                    dailyStreak++;
+                }
+                
+                saveState();
+                updateUIState();
+                updateChartData();
+                
+                openCustomAlert("Mind Refreshed!", "Your screen break has concluded. Welcome back to highly focused study sessions!");
+            }
+        }
+
+        // Integrated line graphs properties
+        let chartInstance = null;
+
+        function setupChart() {
+            const ctx = document.getElementById('postureChart').getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9';
+            const tickColor = isDark ? '#94a3b8' : '#475569';
+            
+            const data = {
+                labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                datasets: [{
+                    label: 'Focus & Break Balance Index (%)',
+                    data: [75, 80, 85, 90, 85, 80, dailyScore],
+                    backgroundColor: 'rgba(79, 70, 229, 0.15)',
+                    borderColor: '#4f46e5',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4f46e5',
+                    pointBorderColor: '#ffffff',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            };
+
+            const config = {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 40,
+                            max: 100,
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: tickColor,
+                                font: {
+                                    size: 10,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: tickColor,
+                                font: {
+                                    size: 10,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            chartInstance = new Chart(ctx, config);
+        }
+
+        function updateChartTheme() {
+            if (!chartInstance) return;
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9';
+            const tickColor = isDark ? '#94a3b8' : '#475569';
+            
+            chartInstance.options.scales.y.grid.color = gridColor;
+            chartInstance.options.scales.y.ticks.color = tickColor;
+            chartInstance.options.scales.x.ticks.color = tickColor;
+            chartInstance.update();
+        }
+
+        function updateChartData() {
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data[6] = dailyScore;
+                chartInstance.update();
+            }
+        }
+    </script>
+</body>
+</html>
